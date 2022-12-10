@@ -1,35 +1,37 @@
 import throttle from 'lodash.throttle';
 
-const FEEDBACKFORMDATA_KEY = 'feedback-form-state';
+const STORAGE_KEY = 'feedback-form-state';
 
-const feedbackFormEl = document.querySelector('.feedback-form');
-feedbackFormEl.addEventListener('input', throttle(onFormInput, 500));
-feedbackFormEl.addEventListener('submit', onFormSubmit);
+const refs = {
+  form: document.querySelector('.feedback-form'),
+  textarea: document.querySelector('.feedback-form textarea'),
+  email: document.querySelector('input[name=email]'),
+};
 
-const textareaEl = document.querySelector('.feedback-form textarea');
-const emailEl = document.querySelector('.feedback-form input');
+refs.form.addEventListener('submit', onFormSubmit);
+refs.form.addEventListener('input', throttle(onTextareaInput, 500));
 
-const data = {};
+let formData = {};
 
-initForm();
+previosData();
 
-function onFormInput(event) {
-  data[event.target.name] = event.target.value;
-
-  localStorage.setItem(FEEDBACKFORMDATA_KEY, JSON.stringify(data));
+function onFormSubmit(evt) {
+  evt.preventDefault();
+  evt.currentTarget.reset();
+  console.log(JSON.parse(localStorage.getItem(STORAGE_KEY)));
+  localStorage.removeItem(STORAGE_KEY);
 }
 
-function onFormSubmit(event) {
-  event.preventDefault();
-  event.currentTarget.reset();
-  console.log(JSON.parse(localStorage.getItem(FEEDBACKFORMDATA_KEY)));
-  localStorage.removeItem(FEEDBACKFORMDATA_KEY);
+function onTextareaInput(evt) {
+  let fg = JSON.parse(localStorage.getItem(STORAGE_KEY));
+  formData = { ...fg, [evt.target.name]: evt.target.value };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
 }
 
-function initForm() {
-  const storagedData = JSON.parse(localStorage.getItem(FEEDBACKFORMDATA_KEY));
-  if (storagedData) {
-    emailEl.value = storagedData.email;
-    textareaEl.value = storagedData.message;
+function previosData() {
+  const parseData = JSON.parse(localStorage.getItem(STORAGE_KEY));
+  if (parseData) {
+    refs.textarea.value = parseData.message || '';
+    refs.email.value = parseData.email || '';
   }
 }
